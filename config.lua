@@ -13,6 +13,8 @@ Config.BlackMoney = true
 
 Config.Cooldown = 60 -- seconds
 
+Config.WantedTime = 30 -- Minutes
+
 Config.Money = {
     Min = 100,
     Max = 5000

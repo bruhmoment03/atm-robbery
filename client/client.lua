@@ -20,34 +20,63 @@ CreateThread(function()
                             Draw3DText(entitypos, "~r~[E]~w~ To Start Robbery")
                         end
                         if IsControlJustPressed(0, 51) then
-                            QBCore.Functions.TriggerCallback('atm:cooldown', function(cooldown)
-                                if not cooldown then
-                                    SetEntityCoordsNoOffset(ped, pedCoords)
-                                    SetEntityHeading(ped, entityheading)
-                                    QBCore.Functions.Progressbar('name_here', 'Hacking Into ATM...', 15000, false, true, {
-                                        disableMovement = true,
-                                        disableCarMovement = true,
-                                        disableMouse = false,
-                                        disableCombat = true,
-                                    }, {
-                                        animDict = 'amb@world_human_stand_mobile@male@text@idle_a',
-                                        anim = 'idle_a',
-                                        flags = 1,
-                                    }, {}, {}, function() --Done
-                                        TriggerServerEvent('atm:client:sketchy') -- Anti Cheat (if the cheater is smart enough then he would be able to bypass it)
-                                        TriggerServerEvent('atm:server:startrob')
-                                        TriggerServerEvent('atm:server:begincooldown')
-                                    end, function() -- Cancel
-                                        showtext = false
-                                        QBCore.Functions.Notify('Hacking Canceled!', 'success')
-                                        StopAnimTask(ped, "amb@world_human_stand_mobile@male@text@idle_a", "idle_a", 1.0)
+                            local dialog = exports['qb-input']:ShowInput({
+                                header = '請輸入參與此次搶劫玩家ID',
+                                submitText = "確認",
+                                inputs = {
+                                    {
+                                        type = 'number',
+                                        isRequired = true,
+                                        name = 'mainrob',
+                                        text = '你的ID'
+                                    },
+                                    {
+                                        type = 'number',
+                                        isRequired = true,
+                                        name = 'teammates',
+                                        text = '隊友的ID'
+                                    }
+                                }
+                            })
+                            if dialog then
+                                local mainr = dialog.mainrob
+                                local secondr = dialog.teammates
+                                if tonumber(mainr) == tonumber(QBCore.Functions.GetPlayerData().source) then
+                                    TriggerServerEvent("ws_wanted:chatlog", mainr, secondr)
+                                    TriggerServerEvent("ws_wanted:wantedPlayer", mainr, Config.WantedTime, "搶劫超商(主謀)")
+                                    TriggerServerEvent("ws_wanted:wantedPlayer", secondr, Config.WantedTime, "搶劫超商(共犯)")
+                                    QBCore.Functions.TriggerCallback('atm:cooldown', function(cooldown)
+                                        if not cooldown then
+                                            SetEntityCoordsNoOffset(ped, pedCoords)
+                                            SetEntityHeading(ped, entityheading)
+                                            QBCore.Functions.Progressbar('name_here', 'Hacking Into ATM...', 15000, false, true, {
+                                                disableMovement = true,
+                                                disableCarMovement = true,
+                                                disableMouse = false,
+                                                disableCombat = true,
+                                            }, {
+                                                animDict = 'amb@world_human_stand_mobile@male@text@idle_a',
+                                                anim = 'idle_a',
+                                                flags = 1,
+                                            }, {}, {}, function() --Done
+                                                TriggerServerEvent('atm:client:sketchy') -- Anti Cheat (if the cheater is smart enough then he would be able to bypass it)
+                                                TriggerServerEvent('atm:server:startrob')
+                                                TriggerServerEvent('atm:server:begincooldown')
+                                            end, function() -- Cancel
+                                                showtext = false
+                                                QBCore.Functions.Notify('Hacking Canceled!', 'success')
+                                                StopAnimTask(ped, "amb@world_human_stand_mobile@male@text@idle_a", "idle_a", 1.0)
+                                            end)
+                                        else
+                                            QBCore.Functions.TriggerCallback('atm:time', function(time)
+                                                QBCore.Functions.Notify('Please Wait '.. time .. ' seconds!', 'error')
+                                            end)
+                                        end
                                     end)
                                 else
-                                    QBCore.Functions.TriggerCallback('atm:time', function(time)
-                                        QBCore.Functions.Notify('Please Wait '.. time .. ' seconds!', 'error')
-                                    end)
+                                    QBCore.Functions.Notify("還想逃避阿?", 'error', 7500)
                                 end
-                            end)
+                            end
                         end
                     end
                 end
@@ -94,10 +123,18 @@ AddEventHandler("datacrack", function(output)
     end
 end)
 
-function hintToDisplay(text)
-    SetTextComponentFormat("STRING")
+function DrawTxt(x, y, width, height, scale, text, r, g, b, a, outline)
+    SetTextFont(1)
+    SetTextProportional(0)
+    SetTextScale(scale, scale)
+    SetTextColour(r, g, b, a)
+    SetTextDropShadow(0, 0, 0, 0,255)
+    SetTextEdge(2, 0, 0, 0, 255)
+    SetTextDropShadow()
+    SetTextOutline()
+    SetTextEntry("STRING")
     AddTextComponentString(text)
-    DisplayHelpTextFromStringLabel(0, 0, 1, 20000)
+    DrawText(x - width/1.75, y - height/2 + 0.005)
 end
 
 function GrabCash()
@@ -122,6 +159,7 @@ function GrabCash()
             break
         end
         hintToDisplay("Press ~INPUT_DETONATE~ \nTo Cum Hard")
+        DrawTxt(0.94, 1.40, 1.0, 1.0, 0.4, "Press ~INPUT_DETONATE~ To Stop Grabbing", 255, 255, 255, 255)
         Wait(1)
     end
     SetEntityVisible(MoneyObject, false, false)
@@ -132,4 +170,4 @@ function GrabCash()
     Wait(2500)
 end
 
-PlaySound(-1, "Lose_1st", "GTAO_FM_Events_Soundset", 0, 0, 1)
+--PlaySound(-1, "Lose_1st", "GTAO_FM_Events_Soundset", 0, 0, 1)

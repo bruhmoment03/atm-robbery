@@ -7,6 +7,7 @@ version '1.0.0'
 
 client_scripts {
 	'client/client.lua',
+	'datacrack/client.lua'
     'config.lua'
 }
 
